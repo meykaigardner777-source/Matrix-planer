@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Matrix Day Planner</title>
     
-    <!-- PWA Settings for Borderless Android Web App -->
+    <!-- PWA Settings for Fullscreen Android App -->
     <link rel="manifest" href="manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -30,7 +30,7 @@
             position: fixed;
         }
 
-        /* White Matrix Rain Canvas Background */
+        /* Matrix Rain Canvas Background */
         canvas {
             position: fixed;
             top: 0;
@@ -72,7 +72,7 @@
             }
         }
 
-        /* Mobile Adjustments: Matrix Rain shows in header & drawer, Main area is solid black */
+        /* Mobile Adjustments */
         @media (max-width: 767px) {
             .app-container {
                 background: transparent;
@@ -110,7 +110,7 @@
             }
         }
 
-        /* Mobile Top Navigation Header (Transparent to reveal Matrix Rain) */
+        /* Mobile Header */
         .mobile-header {
             display: none;
             align-items: center;
@@ -133,16 +133,6 @@
             font-size: 22px;
             cursor: pointer;
             padding: 4px 8px;
-        }
-
-        .fullscreen-btn {
-            background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            cursor: pointer;
         }
 
         .btn-red {
@@ -215,7 +205,6 @@
             overflow-y: auto;
         }
 
-        /* Mobile Solid Backdrop (Blocks rain on main content area) */
         @media (max-width: 767px) {
             .main-content {
                 background-color: #0d0d0d;
@@ -373,7 +362,6 @@
             <div class="mobile-header">
                 <button class="menu-toggle" id="menuToggle">&#9776;</button>
                 <span style="font-weight: bold; font-size: 15px;">Matrix Planner</span>
-                <button class="fullscreen-btn" id="fsBtn">FULLSCREEN</button>
             </div>
 
             <!-- Main Content Area -->
@@ -458,7 +446,6 @@
         const sidebar = document.getElementById('sidebar');
         const menuToggle = document.getElementById('menuToggle');
         const overlay = document.getElementById('overlay');
-        const fsBtn = document.getElementById('fsBtn');
 
         function toggleMobileMenu() {
             sidebar.classList.toggle('open');
@@ -467,14 +454,6 @@
 
         menuToggle.onclick = toggleMobileMenu;
         overlay.onclick = toggleMobileMenu;
-
-        fsBtn.onclick = () => {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(err => {});
-            } else {
-                document.exitFullscreen();
-            }
-        };
 
         function saveToStorage() {
             localStorage.setItem('matrix_plans_v3', JSON.stringify(plans));
