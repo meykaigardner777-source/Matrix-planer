@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrix Day Planner</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #000;
+            color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Matrix Rain Background */
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            opacity: 0.35;
+        }
+
+        /* App Container Layout matching screenshot interface */
+        .app-container {
+            position: relative;
+            z-index: 2;
+            width: 90vw;
+            max-width: 1100px;
+            height: 85vh;
+            background: rgba(18, 18, 18, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            display: flex;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            overflow: hidden;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 280px;
+            background-color: rgba(15, 15, 15, 0.95);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* Main Red Action Button */
+        .btn-red {
+            background-color: #cc0000;
+            color: #ffffff;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            width: 100%;
+            text-align: center;
+        }
+
+        .btn-red:hover {
+            background-color: #ee0000;
+        }
+
+        .item-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .list-card {
+            background-color: #262626;
+            border-radius: 6px;
+            padding: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .list-card:hover {
+            background-color: #333333;
+        }
+
+        .list-card.active {
+            border-color: #cc0000;
+            background-color: #2d2d2d;
+        }
+
+        .card-title {
+            font-weight: 600;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
+        }
+
+        .card-preview {
+            font-size: 12px;
+            color: #888888;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Main Area */
+        .main-content {
+            flex: 1;
+            padding: 24px 30px;
+            display: flex;
+            flex-direction: column;
+            background-color: rgba(12, 12, 12, 0.9);
+        }
+
+        .header-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn-green {
+            background-color: #1b8a51;
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-green:hover {
+            background-color: #22a863;
+        }
+
+        .input-title {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            outline: none;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .input-title::placeholder {
+            color: #555;
+        }
+
+        /* Task & Goal Cross-out System */
+        .task-input-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .task-input-bar input {
+            flex: 1;
+            background: #1e1e1e;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .task-input-bar input:focus {
+            border-color: #cc0000;
+        }
+
+        .btn-add {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 0 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-add:hover {
+            background: #444;
+        }
+
+        .tasks-container {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            background: #1a1a1a;
+            padding: 12px;
+            border-radius: 4px;
+            border: 1px solid #2a2a2a;
+            user-select: none;
+        }
+
+        .task-item.completed span {
+            text-decoration: line-through;
+            color: #666666;
+        }
+
+        .task-checkbox {
+            margin-right: 12px;
+            accent-color: #cc0000;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .task-text {
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .btn-delete-item {
+            background: transparent;
+            border: none;
+            color: #555;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-delete-item:hover {
+            color: #cc0000;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Canvas for Matrix Digital Rain -->
+    <canvas id="matrixCanvas"></canvas>
+
+    <!-- Main Planner Interface -->
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <button class="btn-red" id="newLogBtn">+ New Day Plan</button>
+            <div class="item-list" id="logList">
+                <!-- Log Cards injected dynamically -->
+            </div>
+        </div>
+
+        <!-- Editor View -->
+        <div class="main-content">
+            <div class="header-actions">
+                <button class="btn-green" id="saveBtn">Save Plan</button>
+                <button class="btn-red" id="deleteBtn" style="width: auto; padding: 8px 18px;">Delete</button>
+            </div>
+            
+            <input type="text" id="planTitle" class="input-title" placeholder="Title (e.g., Daily Goals - Oct 24)" />
+            
+            <div class="task-input-bar">
+                <input type="text" id="taskInput" placeholder="Add a task or goal..." />
+                <button class="btn-add" id="addTaskBtn">Add Task</button>
+            </div>
+
+            <div class="tasks-container" id="tasksContainer">
+                <!-- Tasks list dynamically rendered -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* Matrix Rain Background Logic */
+        const canvas = document.getElementById('matrixCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Katakana character set
+        const katakana = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
+        const latin = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const alphabet = katakana + latin;
+
+        const fontSize = 16;
+        let columns = Math.floor(canvas.width / fontSize);
+        let rainDrops = Array(columns).fill(1);
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#0f0'; // Classic Matrix Green
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < rainDrops.length; i++) {
+                const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
+
+                if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    rainDrops[i] = 0;
+                }
+                rainDrops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 30);
+
+        /* Day Planner Application State Management */
+        let plans = JSON.parse(localStorage.getItem('matrix_plans')) || [
+            {
+                id: Date.now(),
+                title: "Daily Plan - " + new Date().toLocaleDateString(),
+                tasks: [
+                    { id: 1, text: "Welcome to Matrix Day Planner", completed: false },
+                    { id: 2, text: "Click the checkbox to cross out a completed item", completed: true }
+                ]
+            }
+        ];
+        let activePlanId = plans[0]?.id || null;
+
+        // UI Element References
+        const logListEl = document.getElementById('logList');
+        const planTitleInput = document.getElementById('planTitle');
+        const tasksContainer = document.getElementById('tasksContainer');
+        const taskInput = document.getElementById('taskInput');
+        const newLogBtn = document.getElementById('newLogBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const deleteBtn = document.getElementById('deleteBtn');
+        const addTaskBtn = document.getElementById('addTaskBtn');
+
+        function saveToStorage() {
+            localStorage.setItem('matrix_plans', JSON.stringify(plans));
+        }
+
+        function renderSidebar() {
+            logListEl.innerHTML = '';
+            plans.forEach(plan => {
+                const card = document.createElement('div');
+                card.className = `list-card ${plan.id === activePlanId ? 'active' : ''}`;
+                card.onclick = () => selectPlan(plan.id);
+
+                const title = document.createElement('div');
+                title.className = 'card-title';
+                title.textContent = plan.title || 'Untitled Plan';
+
+                const preview = document.createElement('div');
+                preview.className = 'card-preview';
+                preview.textContent = `${plan.tasks.length} item(s) logged`;
+
+                card.appendChild(title);
+                card.appendChild(preview);
+                logListEl.appendChild(card);
+            });
+        }
+
+        function renderActivePlan() {
+            const currentPlan = plans.find(p => p.id === activePlanId);
+            if (!currentPlan) {
+                planTitleInput.value = '';
+                tasksContainer.innerHTML = '';
+                return;
+            }
+
+            planTitleInput.value = currentPlan.title;
+            tasksContainer.innerHTML = '';
+
+            currentPlan.tasks.forEach(task => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = `task-item ${task.completed ? 'completed' : ''}`;
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'task-checkbox';
+                checkbox.checked = task.completed;
+                checkbox.onchange = () => toggleTask(task.id);
+
+                const label = document.createElement('span');
+                label.className = 'task-text';
+                label.textContent = task.text;
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn-delete-item';
+                deleteBtn.innerHTML = '&#10005;';
+                deleteBtn.onclick = () => deleteTask(task.id);
+
+                itemDiv.appendChild(checkbox);
+                itemDiv.appendChild(label);
+                itemDiv.appendChild(deleteBtn);
+                tasksContainer.appendChild(itemDiv);
+            });
+        }
+
+        function selectPlan(id) {
+            activePlanId = id;
+            renderSidebar();
+            renderActivePlan();
+        }
+
+        function createNewPlan() {
+            const newPlan = {
+                id: Date.now(),
+                title: 'New Daily Plan',
+                tasks: []
+            };
+            plans.unshift(newPlan);
+            activePlanId = newPlan.id;
+            saveToStorage();
+            renderSidebar();
+            renderActivePlan();
+        }
+
+        function addTask() {
+            const text = taskInput.value.trim();
+            if (!text) return;
+
+            const currentPlan = plans.find(p => p.id === activePlanId);
+            if (currentPlan) {
+                currentPlan.tasks.push({
+                    id: Date.now(),
+                    text: text,
+                    completed: false
+                });
+                taskInput.value = '';
+                saveToStorage();
+                renderActivePlan();
+                renderSidebar();
+            }
+        }
+
+        function toggleTask(taskId) {
+            const currentPlan = plans.find(p => p.id === activePlanId);
+            if (currentPlan) {
+                const task = currentPlan.tasks.find(t => t.id === taskId);
+                if (task) {
+                    task.completed = !task.completed;
+                    saveToStorage();
+                    renderActivePlan();
+                }
+            }
+        }
+
+        function deleteTask(taskId) {
+            const currentPlan = plans.find(p => p.id === activePlanId);
+            if (currentPlan) {
+                currentPlan.tasks = currentPlan.tasks.filter(t => t.id !== taskId);
+                saveToStorage();
+                renderActivePlan();
+                renderSidebar();
+            }
+        }
+
+        // Event Listeners
+        newLogBtn.onclick = createNewPlan;
+        
+        saveBtn.onclick = () => {
+            const currentPlan = plans.find(p => p.id === activePlanId);
+            if (currentPlan) {
+                currentPlan.title = planTitleInput.value;
+                saveToStorage();
+                renderSidebar();
+            }
+        };
+
+        deleteBtn.onclick = () => {
+            plans = plans.filter(p => p.id !== activePlanId);
+            activePlanId = plans[0]?.id || null;
+            saveToStorage();
+            renderSidebar();
+            renderActivePlan();
+        };
+
+        addTaskBtn.onclick = addTask;
+        taskInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addTask();
+        });
+
+        planTitleInput.addEventListener('input', () => {
+            const currentPlan = plans.find(p => p.id === activePlanId);
+            if (currentPlan) {
+                currentPlan.title = planTitleInput.value;
+                saveToStorage();
+                renderSidebar();
+            }
+        });
+
+        // Initialize App
+        renderSidebar();
+        renderActivePlan();
+    </script>
+</body>
+</html>
