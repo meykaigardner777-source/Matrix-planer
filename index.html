@@ -397,9 +397,8 @@
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
 
-        const katakana = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
-        const latin = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        const alphabet = katakana + latin;
+        const alphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ' + 
+            'アカサタナハマヤラワガザダバパイキシチニヒミリギジヂビピウクスツヌフムユルグズブヅプエケセテネヘメレゲゼデベペオコソトノホモヨロヲゴゾドボポ';
 
         const fontSize = 16;
         let columns = Math.floor(canvas.width / fontSize);
@@ -512,7 +511,7 @@
 
                 const deleteBtnItem = document.createElement('button');
                 deleteBtnItem.className = 'btn-delete-item';
-                deleteBtnItem.innerHTML = '&#10005;';
+                deleteBtnItem.textContent = '\u2715';
                 deleteBtnItem.onclick = () => deleteTask(task.id);
 
                 itemDiv.appendChild(checkbox);
