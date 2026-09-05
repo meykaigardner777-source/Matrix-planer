@@ -235,6 +235,16 @@
             cursor: pointer;
         }
 
+        .btn-blue {
+            background-color: #2b5288;
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
         .input-title {
             background: transparent;
             border: none;
@@ -326,6 +336,7 @@
             padding: 4px 8px;
         }
 
+        /* Fully transparent overlay for closing mobile menu on click */
         .overlay {
             display: none;
             position: fixed;
@@ -333,7 +344,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.6);
+            background: transparent;
             z-index: 9;
         }
 
@@ -364,6 +375,7 @@
             <!-- Main Content Area -->
             <div class="main-content">
                 <div class="header-actions">
+                    <button class="btn-blue" id="headerNewPlanBtn">+ New Plan</button>
                     <button class="btn-green" id="saveBtn">Save</button>
                     <button class="btn-red" id="deleteBtn" style="width: auto; padding: 8px 16px;">Delete</button>
                 </div>
@@ -436,6 +448,7 @@
         const tasksContainer = document.getElementById('tasksContainer');
         const taskInput = document.getElementById('taskInput');
         const newLogBtn = document.getElementById('newLogBtn');
+        const headerNewPlanBtn = document.getElementById('headerNewPlanBtn');
         const saveBtn = document.getElementById('saveBtn');
         const deleteBtn = document.getElementById('deleteBtn');
         const addTaskBtn = document.getElementById('addTaskBtn');
@@ -531,7 +544,7 @@
         function createNewPlan() {
             const newPlan = {
                 id: Date.now(),
-                title: 'New Daily Plan',
+                title: 'Daily Plan - ' + new Date().toLocaleDateString(),
                 tasks: []
             };
             plans.unshift(newPlan);
@@ -588,6 +601,7 @@
         }
 
         newLogBtn.onclick = createNewPlan;
+        headerNewPlanBtn.onclick = createNewPlan;
 
         saveBtn.onclick = () => {
             const currentPlan = plans.find(p => p.id === activePlanId);
@@ -624,6 +638,17 @@
                 renderSidebar();
             }
         };
+
+        // Escape key shortcut to close drawer or blur inputs
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (sidebar.classList.contains('open')) {
+                    toggleMobileMenu();
+                }
+                taskInput.blur();
+                planTitleInput.blur();
+            }
+        });
 
         renderSidebar();
         renderActivePlan();
