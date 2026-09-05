@@ -320,10 +320,10 @@
         .btn-delete-item {
             background: transparent;
             border: none;
-            color: #666666;
+            color: #aaaaaa;
             cursor: pointer;
             font-size: 16px;
-            padding: 0 4px;
+            padding: 4px 8px;
         }
 
         .overlay {
@@ -462,7 +462,7 @@
                 card.className = `list-card ${plan.id === activePlanId ? 'active' : ''}`;
                 card.onclick = () => {
                     selectPlan(plan.id);
-                    if (window.innerWidth < 768) toggleMobileMenu();
+                    if (window.innerWidth < 768 && sidebar.classList.contains('open')) toggleMobileMenu();
                 };
 
                 const title = document.createElement('div');
@@ -498,7 +498,10 @@
                 checkbox.type = 'checkbox';
                 checkbox.className = 'task-checkbox';
                 checkbox.checked = task.completed;
-                checkbox.onchange = () => toggleTask(task.id);
+                checkbox.onclick = (e) => {
+                    e.stopPropagation();
+                    toggleTask(task.id);
+                };
 
                 const label = document.createElement('span');
                 label.className = 'task-text';
@@ -506,8 +509,11 @@
 
                 const deleteBtnItem = document.createElement('button');
                 deleteBtnItem.className = 'btn-delete-item';
-                deleteBtnItem.textContent = '\u2715';
-                deleteBtnItem.onclick = () => deleteTask(task.id);
+                deleteBtnItem.innerHTML = '&#10005;';
+                deleteBtnItem.onclick = (e) => {
+                    e.stopPropagation();
+                    deleteTask(task.id);
+                };
 
                 itemDiv.appendChild(checkbox);
                 itemDiv.appendChild(label);
@@ -540,7 +546,12 @@
             const text = taskInput.value.trim();
             if (!text) return;
 
-            const currentPlan = plans.find(p => p.id === activePlanId);
+            let currentPlan = plans.find(p => p.id === activePlanId);
+            if (!currentPlan) {
+                createNewPlan();
+                currentPlan = plans.find(p => p.id === activePlanId);
+            }
+
             if (currentPlan) {
                 currentPlan.tasks.push({
                     id: Date.now(),
@@ -588,6 +599,7 @@
         };
 
         deleteBtn.onclick = () => {
+            if (!activePlanId) return;
             plans = plans.filter(p => p.id !== activePlanId);
             activePlanId = plans[0]?.id || null;
             saveToStorage();
@@ -596,18 +608,22 @@
         };
 
         addTaskBtn.onclick = addTask;
-        taskInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') addTask();
-        });
 
-        planTitleInput.addEventListener('input', () => {
+        taskInput.onkeydown = (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addTask();
+            }
+        };
+
+        planTitleInput.oninput = () => {
             const currentPlan = plans.find(p => p.id === activePlanId);
             if (currentPlan) {
                 currentPlan.title = planTitleInput.value;
                 saveToStorage();
                 renderSidebar();
             }
-        });
+        };
 
         renderSidebar();
         renderActivePlan();
