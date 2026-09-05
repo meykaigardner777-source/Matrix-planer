@@ -2,27 +2,35 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Matrix Day Planner</title>
+    
+    <!-- PWA Settings for Borderless Android Web App -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000000">
+
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        body {
-            background-color: #000;
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: #000000;
             color: #ffffff;
-            height: 100vh;
             overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: fixed;
         }
 
-        /* Matrix Rain Background */
+        /* White Matrix Rain Canvas Background */
         canvas {
             position: fixed;
             top: 0;
@@ -31,36 +39,112 @@
             height: 100vh;
             z-index: 1;
             opacity: 0.35;
+            pointer-events: none;
         }
 
-        /* App Container Layout matching screenshot interface */
         .app-container {
             position: relative;
             z-index: 2;
-            width: 90vw;
-            max-width: 1100px;
-            height: 85vh;
-            background: rgba(18, 18, 18, 0.85);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
+            width: 100%;
+            height: 100%;
             display: flex;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
-            overflow: hidden;
+            flex-direction: row;
         }
 
-        /* Sidebar Styling */
+        /* Desktop Mode: Frosted Glass Panel */
+        @media (min-width: 768px) {
+            body {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .app-container {
+                width: 92vw;
+                max-width: 1100px;
+                height: 88vh;
+                border-radius: 12px;
+                background: rgba(18, 18, 18, 0.45);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.7);
+                overflow: hidden;
+            }
+        }
+
+        /* Mobile Adjustments: Matrix Rain shows in header & drawer, Main area is solid black */
+        @media (max-width: 767px) {
+            .app-container {
+                background: transparent;
+            }
+        }
+
+        /* Sidebar Drawer */
         .sidebar {
             width: 280px;
-            background-color: rgba(15, 15, 15, 0.95);
+            background: rgba(12, 12, 12, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border-right: 1px solid rgba(255, 255, 255, 0.08);
-            padding: 20px;
+            padding: 16px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 12px;
+            transition: transform 0.3s ease;
+            z-index: 10;
         }
 
-        /* Main Red Action Button */
+        @media (max-width: 767px) {
+            .sidebar {
+                position: absolute;
+                top: 0;
+                left: 0;
+                height: 100%;
+                width: 82%;
+                max-width: 300px;
+                transform: translateX(-100%);
+                box-shadow: 4px 0 20px rgba(0, 0, 0, 0.9);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+        }
+
+        /* Mobile Top Navigation Header (Transparent to reveal Matrix Rain) */
+        .mobile-header {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background: transparent;
+            z-index: 5;
+        }
+
+        @media (max-width: 767px) {
+            .mobile-header {
+                display: flex;
+            }
+        }
+
+        .menu-toggle {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 22px;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+
+        .fullscreen-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
         .btn-red {
             background-color: #cc0000;
             color: #ffffff;
@@ -70,12 +154,11 @@
             font-weight: bold;
             font-size: 14px;
             cursor: pointer;
-            transition: background 0.2s ease;
             width: 100%;
             text-align: center;
         }
 
-        .btn-red:hover {
+        .btn-red:active {
             background-color: #ee0000;
         }
 
@@ -88,21 +171,16 @@
         }
 
         .list-card {
-            background-color: #262626;
+            background: rgba(40, 40, 40, 0.5);
             border-radius: 6px;
             padding: 12px;
             cursor: pointer;
-            transition: background 0.2s;
-            border: 1px solid transparent;
-        }
-
-        .list-card:hover {
-            background-color: #333333;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .list-card.active {
             border-color: #cc0000;
-            background-color: #2d2d2d;
+            background: rgba(60, 60, 60, 0.7);
         }
 
         .card-title {
@@ -116,26 +194,49 @@
 
         .card-preview {
             font-size: 12px;
-            color: #888888;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            color: #aaaaaa;
         }
 
-        /* Main Area */
-        .main-content {
+        /* Workspace Main Panel */
+        .workspace-wrapper {
             flex: 1;
-            padding: 24px 30px;
             display: flex;
             flex-direction: column;
-            background-color: rgba(12, 12, 12, 0.9);
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        /* Mobile Solid Backdrop (Blocks rain on main content area) */
+        @media (max-width: 767px) {
+            .main-content {
+                background-color: #0d0d0d;
+                border-top-left-radius: 16px;
+                border-top-right-radius: 16px;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.8);
+            }
+        }
+
+        @media (min-width: 768px) {
+            .main-content {
+                background: transparent;
+            }
         }
 
         .header-actions {
             display: flex;
             justify-content: flex-end;
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         .btn-green {
@@ -148,40 +249,36 @@
             cursor: pointer;
         }
 
-        .btn-green:hover {
-            background-color: #22a863;
-        }
-
         .input-title {
             background: transparent;
             border: none;
             color: white;
-            font-size: 24px;
+            font-size: 22px;
             font-weight: bold;
             outline: none;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             width: 100%;
         }
 
         .input-title::placeholder {
-            color: #555;
+            color: #666666;
         }
 
-        /* Task & Goal Cross-out System */
         .task-input-bar {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 8px;
+            margin-bottom: 16px;
         }
 
         .task-input-bar input {
             flex: 1;
-            background: #1e1e1e;
-            border: 1px solid #333;
+            background: #181818;
+            border: 1px solid #333333;
             color: #fff;
-            padding: 10px 14px;
-            border-radius: 4px;
+            padding: 12px;
+            border-radius: 6px;
             outline: none;
+            font-size: 14px;
         }
 
         .task-input-bar input:focus {
@@ -189,16 +286,13 @@
         }
 
         .btn-add {
-            background: #333;
+            background: #2a2a2a;
             color: white;
             border: none;
             padding: 0 16px;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
-        }
-
-        .btn-add:hover {
-            background: #444;
+            font-weight: bold;
         }
 
         .tasks-container {
@@ -212,14 +306,13 @@
         .task-item {
             display: flex;
             align-items: center;
-            background: #1a1a1a;
+            background: #141414;
             padding: 12px;
-            border-radius: 4px;
-            border: 1px solid #2a2a2a;
-            user-select: none;
+            border-radius: 6px;
+            border: 1px solid #222222;
         }
 
-        .task-item.completed span {
+        .task-item.completed .task-text {
             text-decoration: line-through;
             color: #666666;
         }
@@ -227,66 +320,83 @@
         .task-checkbox {
             margin-right: 12px;
             accent-color: #cc0000;
-            width: 16px;
-            height: 16px;
+            width: 18px;
+            height: 18px;
             cursor: pointer;
         }
 
         .task-text {
             flex: 1;
             font-size: 14px;
+            word-break: break-word;
         }
 
         .btn-delete-item {
             background: transparent;
             border: none;
-            color: #555;
+            color: #666666;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 16px;
+            padding: 0 4px;
         }
 
-        .btn-delete-item:hover {
-            color: #cc0000;
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 9;
+        }
+
+        .overlay.active {
+            display: block;
         }
     </style>
 </head>
 <body>
 
-    <!-- Canvas for Matrix Digital Rain -->
     <canvas id="matrixCanvas"></canvas>
+    <div class="overlay" id="overlay"></div>
 
-    <!-- Main Planner Interface -->
     <div class="app-container">
-        <!-- Sidebar -->
-        <div class="sidebar">
+        <!-- Sidebar Navigation Drawer -->
+        <div class="sidebar" id="sidebar">
             <button class="btn-red" id="newLogBtn">+ New Day Plan</button>
-            <div class="item-list" id="logList">
-                <!-- Log Cards injected dynamically -->
-            </div>
+            <div class="item-list" id="logList"></div>
         </div>
 
-        <!-- Editor View -->
-        <div class="main-content">
-            <div class="header-actions">
-                <button class="btn-green" id="saveBtn">Save Plan</button>
-                <button class="btn-red" id="deleteBtn" style="width: auto; padding: 8px 18px;">Delete</button>
-            </div>
-            
-            <input type="text" id="planTitle" class="input-title" placeholder="Title (e.g., Daily Goals - Oct 24)" />
-            
-            <div class="task-input-bar">
-                <input type="text" id="taskInput" placeholder="Add a task or goal..." />
-                <button class="btn-add" id="addTaskBtn">Add Task</button>
+        <div class="workspace-wrapper">
+            <!-- Mobile Header Top Bar -->
+            <div class="mobile-header">
+                <button class="menu-toggle" id="menuToggle">&#9776;</button>
+                <span style="font-weight: bold; font-size: 15px;">Matrix Planner</span>
+                <button class="fullscreen-btn" id="fsBtn">FULLSCREEN</button>
             </div>
 
-            <div class="tasks-container" id="tasksContainer">
-                <!-- Tasks list dynamically rendered -->
+            <!-- Main Content Area -->
+            <div class="main-content">
+                <div class="header-actions">
+                    <button class="btn-green" id="saveBtn">Save</button>
+                    <button class="btn-red" id="deleteBtn" style="width: auto; padding: 8px 16px;">Delete</button>
+                </div>
+                
+                <input type="text" id="planTitle" class="input-title" placeholder="Title (e.g., Daily Goals)" />
+                
+                <div class="task-input-bar">
+                    <input type="text" id="taskInput" placeholder="Add a task or goal..." />
+                    <button class="btn-add" id="addTaskBtn">Add</button>
+                </div>
+
+                <div class="tasks-container" id="tasksContainer"></div>
             </div>
         </div>
     </div>
 
     <script>
-        /* Matrix Rain Background Logic */
+        /* Matrix Digital Rain Animation */
         const canvas = document.getElementById('matrixCanvas');
         const ctx = canvas.getContext('2d');
 
@@ -297,7 +407,6 @@
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
 
-        // Katakana character set
         const katakana = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
         const latin = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         const alphabet = katakana + latin;
@@ -310,7 +419,7 @@
             ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            ctx.fillStyle = '#0f0'; // Classic Matrix Green
+            ctx.fillStyle = '#ffffff'; 
             ctx.font = fontSize + 'px monospace';
 
             for (let i = 0; i < rainDrops.length; i++) {
@@ -323,22 +432,21 @@
                 rainDrops[i]++;
             }
         }
-        setInterval(drawMatrix, 30);
+        setInterval(drawMatrix, 33);
 
-        /* Day Planner Application State Management */
-        let plans = JSON.parse(localStorage.getItem('matrix_plans')) || [
+        /* App Logic */
+        let plans = JSON.parse(localStorage.getItem('matrix_plans_v3')) || [
             {
                 id: Date.now(),
                 title: "Daily Plan - " + new Date().toLocaleDateString(),
                 tasks: [
                     { id: 1, text: "Welcome to Matrix Day Planner", completed: false },
-                    { id: 2, text: "Click the checkbox to cross out a completed item", completed: true }
+                    { id: 2, text: "Tap tasks to cross them out", completed: true }
                 ]
             }
         ];
         let activePlanId = plans[0]?.id || null;
 
-        // UI Element References
         const logListEl = document.getElementById('logList');
         const planTitleInput = document.getElementById('planTitle');
         const tasksContainer = document.getElementById('tasksContainer');
@@ -347,9 +455,29 @@
         const saveBtn = document.getElementById('saveBtn');
         const deleteBtn = document.getElementById('deleteBtn');
         const addTaskBtn = document.getElementById('addTaskBtn');
+        const sidebar = document.getElementById('sidebar');
+        const menuToggle = document.getElementById('menuToggle');
+        const overlay = document.getElementById('overlay');
+        const fsBtn = document.getElementById('fsBtn');
+
+        function toggleMobileMenu() {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+        }
+
+        menuToggle.onclick = toggleMobileMenu;
+        overlay.onclick = toggleMobileMenu;
+
+        fsBtn.onclick = () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {});
+            } else {
+                document.exitFullscreen();
+            }
+        };
 
         function saveToStorage() {
-            localStorage.setItem('matrix_plans', JSON.stringify(plans));
+            localStorage.setItem('matrix_plans_v3', JSON.stringify(plans));
         }
 
         function renderSidebar() {
@@ -357,7 +485,10 @@
             plans.forEach(plan => {
                 const card = document.createElement('div');
                 card.className = `list-card ${plan.id === activePlanId ? 'active' : ''}`;
-                card.onclick = () => selectPlan(plan.id);
+                card.onclick = () => {
+                    selectPlan(plan.id);
+                    if (window.innerWidth < 768) toggleMobileMenu();
+                };
 
                 const title = document.createElement('div');
                 title.className = 'card-title';
@@ -365,7 +496,7 @@
 
                 const preview = document.createElement('div');
                 preview.className = 'card-preview';
-                preview.textContent = `${plan.tasks.length} item(s) logged`;
+                preview.textContent = `${plan.tasks.length} item(s)`;
 
                 card.appendChild(title);
                 card.appendChild(preview);
@@ -398,14 +529,14 @@
                 label.className = 'task-text';
                 label.textContent = task.text;
 
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'btn-delete-item';
-                deleteBtn.innerHTML = '&#10005;';
-                deleteBtn.onclick = () => deleteTask(task.id);
+                const deleteBtnItem = document.createElement('button');
+                deleteBtnItem.className = 'btn-delete-item';
+                deleteBtnItem.innerHTML = '&#10005;';
+                deleteBtnItem.onclick = () => deleteTask(task.id);
 
                 itemDiv.appendChild(checkbox);
                 itemDiv.appendChild(label);
-                itemDiv.appendChild(deleteBtn);
+                itemDiv.appendChild(deleteBtnItem);
                 tasksContainer.appendChild(itemDiv);
             });
         }
@@ -427,6 +558,7 @@
             saveToStorage();
             renderSidebar();
             renderActivePlan();
+            if (window.innerWidth < 768 && sidebar.classList.contains('open')) toggleMobileMenu();
         }
 
         function addTask() {
@@ -469,9 +601,8 @@
             }
         }
 
-        // Event Listeners
         newLogBtn.onclick = createNewPlan;
-        
+
         saveBtn.onclick = () => {
             const currentPlan = plans.find(p => p.id === activePlanId);
             if (currentPlan) {
@@ -503,7 +634,6 @@
             }
         });
 
-        // Initialize App
         renderSidebar();
         renderActivePlan();
     </script>
